@@ -1,8 +1,7 @@
 # TestFixtureBoy
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/test_fixture_boy`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This is a test utility tool to copy active records from rails console and generate a fixture file consisting of those records.
+You can print the fixtures to a yaml file.
 
 ## Installation
 
@@ -14,21 +13,73 @@ gem 'test_fixture_boy'
 
 And then execute:
 
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install test_fixture_boy
+    $ bundle install
 
 ## Usage
 
-TODO: Write usage instructions here
+Open you rails console:
+
+```ruby
+  # require this gem.
+  > require 'test_fixture_boy'
+```
+
+Scan all the db records you want to copy.
+```ruby
+  # Scan all the User records to TFBoy.
+  > TFBoy.scan { User.all }
+```
+
+You can except some attributes when scanning, such as credentials.(Of course you can select when querying or after it. )
+```ruby
+  # Scan User 1's all the Account records except password attribute to TFBoy.
+  > TFBoy.except(:password).scan { Account.where(user_id: 1).all }
+  # ATTN:: Queries for the same Model will be overwritten.
+  > TFBoy.except([:password, :id]).scan { Account.where(user_id: 1).all }
+```
+
+You can select some attributes when scanning, like exception.
+```ruby
+  # Scan User 1's all the Account records with only name and status attributes to TFBoy.
+  > TFBoy.select([:name, :status]).scan { Account.where(user_id: 1).all }
+```
+
+You can clear scan cache if you pass true when scanning.
+```ruby
+  # Scan User 1's all the Foo records and clear the current cache.
+  > TFBoy.scan(true) { Foo.where(user_id: 1).all }
+```
+
+After you scan all the records. You can print the records to a yaml file.
+Some other fixtures or seeds file formats will be added in the future.
+```ruby
+  # Print all the records scanned to a yaml file.
+  > TFBoy.print :yaml
+```
+
+Then you can copy the files or copy the contents to your fixture file. The default directory is "/tmp/tfboy/<model name>s.yaml"
+
+One example of how to use those fixtures:
+```ruby
+  path = File.join Rails.root, "spec/fixtures/instances.yaml"
+  instances = YAML.parse(File.open(fix_path, 'r').read).to_ruby
+  instances.each do |attrs|
+    FactoryGirl.create(:instance, attrs)
+  end
+```
+
+The usage procedure is not very convenient. But if you want to create fixtures with many detailed attributes, and you need to copy data from db, using this gem will help you somehow.
+
+Also, if you want to see the introduction from TFBoy:
+```ruby
+  # This will print a brief usage introduction.
+  > TFBoy.show_time
+```
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release` to create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+No tests exist in this project. I will add rspec for it later. The current development way is to get the source code, install this gem through local path. Run it with an rails app or a dummy app.
+If you have any ideas about improving this gem. Email me: xhan@wpi.edu
 
 ## Contributing
 
